@@ -2,11 +2,12 @@
   <div>
     <div class="col-md-2 userlist">
       <div class="panel-heading">
-        <span class="glyphicon glyphicon-user"></span> Online (5)
+        <span class="glyphicon glyphicon-user"></span> Online ({{connectedUsers.length}})
       </div>
       <ul>
-        <li>User1</li>
-        <li>User2</li>
+        <li v-for="user in connectedUsers">
+          {{user}}
+        </li>
       </ul>
     </div>
 
@@ -14,12 +15,34 @@
       <div id="livechat-container">
         <div class="panel panel-primary">
           <div class="panel-heading">
+            <span class="glyphicon glyphicon-comment"></span>
+            &nbsp;
             Lets Chat
           </div>
           <div class="panel-body">
             <ul class="chat" id="messages">
-              <li> message </li>
-              <li> message 2 </li>
+              <li class="left clearfix">
+                <div class="info">
+                  User1 has joined
+                </div>
+                <div>
+                   <span class="chat-img pull-left">
+                     <img src="http://placehold.it/50/55C1E7/fff&text=U" alt="User Avatar" class="img-circle" />
+                   </span>
+                  <div class="chat-body clearfix">
+                    <div class="header">
+                      <strong class="primary-font">user1</strong>
+                      <small class="pull-right text-muted">
+                        <span class="glyphicon glyphicon-time"></span>
+                        &nbsp;{{ message.timestamp }}
+                      </small>
+                    </div>
+                    <p>
+                      hello there
+                    </p>
+                  </div>
+                </div>
+              </li>
             </ul>
           </div>
           <div class="panel-footer">
@@ -38,8 +61,35 @@
 <script>
 export default {
   name: 'HomePage',
+  created () {
+
+  },
   data () {
     return {
+      connectedUsers: ['User a', 'User b'],
+      messages: [],
+      message: {
+        type: "",
+        action: "",
+        user: "",
+        text: "",
+        timestamp: ""
+      },
+      areTyping: []
+    }
+  },
+  methods: {
+    send () {
+
+    },
+    userIsTyping (username) {
+
+    },
+    usersAreTyping() {
+
+    },
+    stoppedTyping () {
+
     }
   }
 }
