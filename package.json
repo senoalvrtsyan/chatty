@@ -1,0 +1,23 @@
+{
+  "name": "chatty",
+  "version": "1.0.0",
+  "description": "Simple chat application using Vue.js/Node.js/socket.io",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/senoalvrtsyan/chatty.git"
+  },
+  "author": "Senik Alvrtsyan",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/senoalvrtsyan/chatty/issues"
+  },
+  "homepage": "https://github.com/senoalvrtsyan/chatty#readme",
+  "dependencies": {
+    "express": "^4.16.3"
+  }
+}
