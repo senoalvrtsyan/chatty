@@ -178,9 +178,14 @@ export default {
     width: 100%;
   }
   .userlist {
-    overflow-y: scroll;
+    overflow-y: hidden;
     height: 500px;
-    border: 1px solid dimgray;
+    border: 1px solid #337ab7;
+    border-radius: 5px;
+    padding: 20px;
+  }
+  .panel-body {
+    overflow: hidden;
   }
   .info {
     font-size: 12px;
