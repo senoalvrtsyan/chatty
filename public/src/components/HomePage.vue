@@ -59,6 +59,7 @@
 </template>
 
 <script>
+  const socket = io('http://localhost:8080');
 export default {
   name: 'HomePage',
   created () {
