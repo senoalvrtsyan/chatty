@@ -1,6 +1,6 @@
 # chatty
 
-##Build a Chat Room from scratch.
+## Build a Chat Room from scratch.
 
 ### Used technologies:  
 * Backend: Node.js/Express.js  
