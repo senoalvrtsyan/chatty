@@ -6,7 +6,12 @@
       </div>
       <ul>
         <li v-for="user in connectedUsers">
-          {{user}}
+          {{user}} &nbsp;
+          <span
+            class="glyphicon glyphicon-pencil"
+            v-if="userIsTyping(user)">
+            ...
+          </span>
         </li>
       </ul>
     </div>
@@ -21,24 +26,24 @@
           </div>
           <div class="panel-body">
             <ul class="chat" id="messages">
-              <li class="left clearfix">
-                <div class="info">
-                  User1 has joined
+              <li class="left clearfix" v-for="message in messages">
+                <div v-if="message.type === 'info'" class="info">
+                  {{message.msg}}
                 </div>
-                <div>
+                <div v-if="message.type === 'chat'">
                    <span class="chat-img pull-left">
                      <img src="http://placehold.it/50/55C1E7/fff&text=U" alt="User Avatar" class="img-circle" />
                    </span>
                   <div class="chat-body clearfix">
                     <div class="header">
-                      <strong class="primary-font">user1</strong>
+                      <strong class="primary-font">{{ message.user }}</strong>
                       <small class="pull-right text-muted">
                         <span class="glyphicon glyphicon-time"></span>
                         &nbsp;{{ message.timestamp }}
                       </small>
                     </div>
                     <p>
-                      hello there
+                      {{message.text}}
                     </p>
                   </div>
                 </div>
@@ -46,8 +51,15 @@
             </ul>
           </div>
           <div class="panel-footer">
-            <form>
-              <input type="text" class="form-control input-lg" placeholder="Type message here">
+            <form @submit.prevent="send">
+              <input
+                type="text"
+                class="form-control input-lg"
+                placeholder="Type message here"
+                v-model="message.text"
+                @keyup="usersAreTyping"
+                @keyup.13="stoppedTyping('13')"
+                @keyup.8="stoppedTyping('8')">
             </form>
           </div>
         </div>
@@ -60,14 +72,68 @@
 
 <script>
   const socket = io('http://localhost:8080');
+  const axios = require('axios');
+  const moment = require('moment');
+
 export default {
   name: 'HomePage',
   created () {
+    // When server emits 'user joined',
+    // we need to update connectedUsers array
+    socket.on('user joined', function (socketId) {
+      // get already connected users first
+      axios.get('/onlineusers')
+      .then(function (response) {
+        for(const key in response.data) {
+          if(this.connectedUsers.indexOf(key) === -1) {
+            this.connectedUsers.push(key);
+          }
+        }
+      }.bind(this));
 
+      const infoMsg = {
+        "type": "info",
+        "msg": `User ${socketId} has joined`
+      };
+      this.messages.push(infoMsg);
+    }.bind(this));
+
+    // If server emits 'chat.message' event,
+    // we should update messages array.
+    socket.on('chat.message', function(message){
+      this.messages.push(message);
+    }.bind(this));
+
+    // server emits 'user typing'
+    socket.on('user typing', function(username){
+      this.areTyping.push(username);
+    }.bind(this));
+
+    // server emits 'stopped typing'
+    socket.on('stopped typing', function(username){
+      const idx = this.areTyping.indexOf(username);
+      if(idx !== -1) {
+        this.areTyping.splice(idx,1);
+      }
+    }.bind(this));
+
+    // when server broadcasts 'user left',
+    // we should remove that user from connectedList
+    socket.on('user left', function (socketId) {
+      const index = this.connectedUsers.indexOf(socketId);
+      if(index !== -1) {
+        this.connectedUsers.splice(index,1);
+      }
+      const infoMsg = {
+        "type": "info",
+        "msg": `User ${socketId} has left`
+      };
+      this.messages.push(infoMsg);
+    }.bind(this));
   },
   data () {
     return {
-      connectedUsers: ['User a', 'User b'],
+      connectedUsers: [],
       messages: [],
       message: {
         type: "",
@@ -81,16 +147,33 @@ export default {
   },
   methods: {
     send () {
-
+      this.message.type = 'chat';
+      this.message.user = socket.id;
+      this.message.timestamp = moment.calendar;
+      socket.emit('chat.message', this.message);
+      // reset message properties
+      this.message.type = '';
+      this.message.user = '';
+      this.message.text = '';
+      this.message.timestamp = '';
     },
     userIsTyping (username) {
-
+      return this.areTyping.indexOf(username) !== -1;
     },
     usersAreTyping() {
-
+      if(this.areTyping.indexOf(socket.id) === -1) {
+        this.areTyping.push(socket.id)
+      }
+      socket.emit('user typing', socket.id);
     },
-    stoppedTyping () {
-
+    stoppedTyping (keycode) {
+      if(keycode === '13' || (keycode === '8' && this.message.text === '')) {
+        const index = this.areTyping.indexOf(socket.id);
+        if (index !== -1) {
+          this.areTyping.splice(index, 1);
+          socket.emit('stopped typing', socket.id);
+        }
+      }
     }
   }
 }
