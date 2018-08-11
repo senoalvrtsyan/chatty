@@ -6,12 +6,7 @@
       </div>
       <ul>
         <li v-for="user in connectedUsers">
-          {{user}} &nbsp;
-          <span
-            class="glyphicon glyphicon-pencil"
-            v-if="userIsTyping(user)">
-            ...
-          </span>
+          {{user}}&nbsp; <span class="glyphicon glyphicon-pencil" v-if="userIsTyping(user)"></span>
         </li>
       </ul>
     </div>
@@ -20,15 +15,13 @@
       <div id="livechat-container">
         <div class="panel panel-primary">
           <div class="panel-heading">
-            <span class="glyphicon glyphicon-comment"></span>
-            &nbsp;
-            Lets Chat
+            <span class="glyphicon glyphicon-comment"></span>&nbsp;Lets Chat
           </div>
           <div class="panel-body">
             <ul class="chat" id="messages">
               <li class="left clearfix" v-for="message in messages">
                 <div v-if="message.type === 'info'" class="info">
-                  {{message.msg}}
+                  {{ message.msg }}
                 </div>
                 <div v-if="message.type === 'chat'">
                    <span class="chat-img pull-left">
@@ -43,7 +36,7 @@
                       </small>
                     </div>
                     <p>
-                      {{message.text}}
+                      {{ message.text }}
                     </p>
                   </div>
                 </div>
@@ -64,7 +57,6 @@
           </div>
         </div>
       </div>
-
     </div>
   </div>
 
@@ -74,13 +66,13 @@
   const socket = io('http://localhost:8080');
   const axios = require('axios');
   const moment = require('moment');
+  const { socketEvents } = require('../../../constants');
 
 export default {
   name: 'HomePage',
   created () {
-    // When server emits 'user joined',
-    // we need to update connectedUsers array
-    socket.on('user joined', function (socketId) {
+    // When server emits 'user joined', we need to update connectedUsers array
+    socket.on(socketEvents.userJoined, function (socketId) {
       // get already connected users first
       axios.get('/onlineusers')
       .then(function (response) {
@@ -98,28 +90,26 @@ export default {
       this.messages.push(infoMsg);
     }.bind(this));
 
-    // If server emits 'chat.message' event,
-    // we should update messages array.
-    socket.on('chat.message', function(message){
+    // If server emits 'chat.message' event, we should update messages array.
+    socket.on(socketEvents.chatMessage, function(message){
       this.messages.push(message);
     }.bind(this));
 
     // server emits 'user typing'
-    socket.on('user typing', function(username){
+    socket.on(socketEvents.userTyping, function(username){
       this.areTyping.push(username);
     }.bind(this));
 
     // server emits 'stopped typing'
-    socket.on('stopped typing', function(username){
-      const idx = this.areTyping.indexOf(username);
-      if(idx !== -1) {
-        this.areTyping.splice(idx,1);
+    socket.on(socketEvents.userStoppedTyping, function(username){
+      const index = this.areTyping.indexOf(username);
+      if(index !== -1) {
+        this.areTyping.splice(index,1);
       }
     }.bind(this));
 
-    // when server broadcasts 'user left',
-    // we should remove that user from connectedList
-    socket.on('user left', function (socketId) {
+    // when server broadcasts 'user left', we should remove that user from connectedList
+    socket.on(socketEvents.userLeft, function (socketId) {
       const index = this.connectedUsers.indexOf(socketId);
       if(index !== -1) {
         this.connectedUsers.splice(index,1);
@@ -149,9 +139,13 @@ export default {
     send () {
       this.message.type = 'chat';
       this.message.user = socket.id;
-      this.message.timestamp = moment.calendar;
-      socket.emit('chat.message', this.message);
-      // reset message properties
+      this.message.timestamp = moment().calendar();
+
+      socket.emit(socketEvents.chatMessage, this.message);
+      this.resetMessageProperties();
+
+    },
+    resetMessageProperties() {
       this.message.type = '';
       this.message.user = '';
       this.message.text = '';
@@ -162,16 +156,16 @@ export default {
     },
     usersAreTyping() {
       if(this.areTyping.indexOf(socket.id) === -1) {
-        this.areTyping.push(socket.id)
+        this.areTyping.push(socket.id);
+        socket.emit(socketEvents.userTyping, socket.id);
       }
-      socket.emit('user typing', socket.id);
     },
     stoppedTyping (keycode) {
       if(keycode === '13' || (keycode === '8' && this.message.text === '')) {
         const index = this.areTyping.indexOf(socket.id);
         if (index !== -1) {
           this.areTyping.splice(index, 1);
-          socket.emit('stopped typing', socket.id);
+          socket.emit(socketEvents.userStoppedTyping, socket.id);
         }
       }
     }
