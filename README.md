@@ -12,5 +12,6 @@
 ## Quick start
 * clone repository
 * cd chatty
+* npm install
 * npm start
-* go http://localhost:8080 in your browser
+* Go http://localhost:8080 in your browser
