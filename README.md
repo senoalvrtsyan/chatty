@@ -5,7 +5,7 @@
 ### Used technologies:  
 * Backend: Node.js/Express.js  
 * Frontend: Vue.js(used Single File Components architecture) with webpack configuration  
-* bootsrap  
+* bootstrap  
 * socket.io  
 
 
